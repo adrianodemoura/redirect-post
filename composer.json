@@ -5,5 +5,17 @@
 	"keywords": ["cakephp", "redirect", "post"],
 	"homepage": "https://github.com/adrianodemoura/redirect-post",
 	"license": "MIT",
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "RedirectPost\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "RedirectPost\\Test\\": "tests/",
+            "RedirectPost\\TestApp\\": "tests/test_app/",
+            "RedirectPostTestPlugin\\": "tests/test_app/Plugin/RedirectPostTestPlugin/src/"
+        }
+    }
 }
