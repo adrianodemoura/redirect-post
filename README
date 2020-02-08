@@ -16,10 +16,8 @@ In Controller:
 to load:
 $this->loadComponent('RedirectPost');
 
-to recover:
-$data = $this->request->getData();
-
 to save:
+$data = $this->request->getData();
 $this->RedirectPost->save( ['action'=>'acton_target'], $data);
 
 to read:
