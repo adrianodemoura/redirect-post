@@ -2,20 +2,32 @@
 RedirectPost
 ----------------------------
 - Requirements
+
 cakePHP 3
 
 - Installation
+
 $ composer require adrianodemoura/redirect-post
 
 - Usage
 
 In Controller:
 
+to load:
 $this->loadComponent('RedirectPost');
 
+to recover:
 $data = $this->request->getData();
+
+to save:
 $this->RedirectPost->save( ['action'=>'acton_target'], $data);
 
+to read:
 $data = $this->RedirectPost->read();
+
+to delete:
+$this->RedirectPost->delete();
+
+
 
 
