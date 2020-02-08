@@ -178,3 +178,5 @@ class RedirectPostComponent extends Component
         return $data;
     }
 }
+
+?>
