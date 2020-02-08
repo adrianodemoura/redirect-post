@@ -5,5 +5,9 @@
 	"keywords": ["cakephp", "redirect", "post"],
 	"homepage": "https://github.com/adrianodemoura/redirect-post",
 	"license": "MIT",
+	"events": [
+	    "push",
+	    "pull_request"
+	  ],
     "minimum-stability": "stable"
 }
