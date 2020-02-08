@@ -1,0 +1,9 @@
+{
+	"name": "adrianodemoura/redirect-post",
+	"description": "Componente redirectPost para cakePHP 3",
+	"type": "cakephp-component",
+	"keywords": ["cakephp", "redirect", "post"],
+	"homepage": "https://github.com/adrianodemoura/redirect-post",
+	"license": "MIT",
+    "minimum-stability": "stable"
+}
