@@ -1,5 +1,8 @@
 # RedirectPost
-----------------------------
+
+## Considerations
+Plugin to redirect and save post.
+
 ## Requirements
 
 cakePHP 3
