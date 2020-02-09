@@ -18,7 +18,7 @@ class PainelController extends AppController
     public function initialize()
     {
         parent::initialize();
-        //$this->loadComponent('RedirectPost.Redirect', ['storage'=>'cache']);
+        //$this->loadComponent('RedirectPost.Redirect', ['storage'=>'cache', 'time'=>15]);
         $this->loadComponent('RedirectPost.Redirect');
     }
 

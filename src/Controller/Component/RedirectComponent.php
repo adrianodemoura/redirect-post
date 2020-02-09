@@ -44,7 +44,15 @@ class RedirectComponent extends Component
      */
     public function initialize( array $config=[] )
     {
-        $this->chave    = 'RedirectPost.'.$this->_registry->getController()->plugin.''.$this->_registry->getController()->name;
+        $plugin         = $this->_registry->getController()->plugin;
+
+        $chave          = 'CachePost.';
+        if ( !empty($plugin) )
+        {
+            $chave .= $plugin.'.';
+        }
+        $chave    .= $this->_registry->getController()->name;
+        $this->chave    = $chave;
 
         $this->time     = isset( $config['time'] ) ? $config['time'] : $this->time;
 
@@ -88,7 +96,7 @@ class RedirectComponent extends Component
         switch ($this->storage)
         {
             case 'cache':
-                $file   = strtolower( str_replace('RedirectPost.','',$this->chave) );
+                $file   = strtolower( str_replace('.','_',$this->chave) );
                 $dir    = TMP . "cache". DS. "redirectPost";
                 $fp = @fopen($dir.DS.$file, "w");
                 if ( !$fp )
@@ -136,17 +144,24 @@ class RedirectComponent extends Component
         switch ($this->storage)
         {
             case 'cache':
-                $file   = strtolower( str_replace('RedirectPost.','',$this->chave) );
+                $file   = strtolower( str_replace('.','_',$this->chave) );
                 $dir    = TMP . "cache". DS. "redirectPost";
-                unlink( $dir . DS . $file );
+                @unlink( $dir . DS . $file );
             break;
 
             default:
-                $Sessao = $this->_registry->getController()->request->getSession();
+                $plugin     = $this->_registry->getController()->plugin;
+                $Sessao     = $this->_registry->getController()->request->getSession();
+
                 $Sessao->delete( $this->chave );
-                if ( empty($Sessao->read('RedirectPost')) )
+
+                if ( empty($Sessao->read('CachePost.'.$plugin)) )
                 {
-                    $Sessao->delete('RedirectPost');
+                    $Sessao->delete('CachePost.'.$plugin);
+                }
+                if ( empty($Sessao->read('CachePost')) )
+                {
+                    $Sessao->delete('CachePost');
                 }
         }
         return true;
@@ -192,7 +207,7 @@ class RedirectComponent extends Component
     private function getCache($insertTime = false)
     {
         $data       = false;
-        $file       = strtolower( str_replace('RedirectPost.','',$this->chave) );
+        $file       = strtolower( str_replace('.','_',$this->chave) );
         $dir        = TMP . "cache" . DS . "redirectPost";
         $dados      = @json_decode( file_get_contents( $dir . DS . $file ), true );
         $data       = @$dados['data'];
