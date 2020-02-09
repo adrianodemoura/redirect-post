@@ -26,7 +26,7 @@ class RedirectComponent extends Component
      *
      * @var Integer
      */
-    private $time       = 30;
+    private $time       = 20;
 
     /**
      * Storage do dados, pode ser "session" ou "cache".
@@ -74,6 +74,7 @@ class RedirectComponent extends Component
 
         return
         [
+            'chave'             => $this->chave,
             'storage'           => $this->storage, 
             'created'           => date( 'H:i:s', $criado ), 
             'expired'           => date( 'H:i:s', $expirado ), 
@@ -170,7 +171,8 @@ class RedirectComponent extends Component
             break;
 
             case 'cookie':
-                unset( $_COOKIE[$this->chave] );
+                unset($_COOKIE[str_replace('.','_', $this->chave)]);
+                setcookie( $this->chave, '', (time() - 3600) );
             break;
 
             default:
