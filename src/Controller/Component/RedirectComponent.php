@@ -53,6 +53,16 @@ class RedirectComponent extends Component
     }
 
     /**
+     * Return information of Redirect.
+     *
+     * @return  Array   $info   time and storage of the component.
+     */
+    public function info()
+    {
+        return ['time (minutes)' => $this->time, 'storage'=>$this->storage];
+    }
+
+    /**
      * Executa o redirecionamento a salva na sessão os dados de $data.
      * 
      * @param   mixed   $url    Parâmetros do redirecionamento, pode ser uma string oum array, veja mais parâmetros do método redirect.
