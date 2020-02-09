@@ -5,8 +5,9 @@
 cakePHP 3
 
 ## Installation
-
+```
 $ composer require adrianodemoura/redirect-post
+```
 
 ## Usage
 
