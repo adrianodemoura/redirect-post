@@ -3,7 +3,7 @@
 
     echo $this->Form->create($PainelForm);
 
-    echo $this->Form->control('placa');
+    echo $this->Form->control('nome');
 
     echo $this->Form->control('cpf');
 
