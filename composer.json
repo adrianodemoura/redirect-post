@@ -20,7 +20,7 @@
     },
 
     "require-dev": {
-        "cakephp/cakephp/debug_kit": "^3.2.*"
+        "cakephp/debug_kit": "^3.2.*"
     },
  
     "support": {
