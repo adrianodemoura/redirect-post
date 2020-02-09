@@ -18,6 +18,10 @@
         "php": ">=5.6",
         "cakephp/cakephp": "^3.5"
     },
+
+    "require-dev": {
+        "cakephp/cakephp/debug_kit": "^3.2.*"
+    },
  
     "support": {
         "issues": "https://github.com/adrianodemoura/redirect-post/issues",
