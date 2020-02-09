@@ -8,14 +8,13 @@
     "minimum-stability": "stable",
     "autoload": {
         "psr-4": {
-            "RedirectPost\\": "src/"
+            "RedirectPost\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "RedirectPost\\Test\\": "tests/",
-            "RedirectPost\\TestApp\\": "tests/test_app/",
-            "RedirectPostTestPlugin\\": "tests/test_app/Plugin/RedirectPostTestPlugin/src/"
+            "RedirectPost\\Test\\": "tests",
+            "Cake\\Test\\" : "vendor/cakephp/cakephp/test"
         }
     }
 }
