@@ -1,4 +1,4 @@
-#RedirectPost
+# RedirectPost
 ----------------------------
 ## Requirements
 
@@ -11,14 +11,14 @@ $ composer require adrianodemoura/redirect-post
 
 ## Usage
 
-In `src/Application.php`:
+### In `src/Application.php`:
 
 ```
 parent::bootstrap();
 $this->addPlugin('RedirectPost');
 ```
 
-In Controller:
+### In Controller:
 
 ```
 public function initialize()
@@ -28,31 +28,30 @@ public function initialize()
 }
 ```
 
-to save:
+### to save:
 ```
 $data = $this->request->getData();
 $this->Redirect->save( ['action'=>'acton_target'], $data);
 ```
 
-to read:
+### to read:
 ``` 
 $data = $this->Redirect->read();
 ```
 
-to delete:
+### to delete:
 ```
 $this->Redirect->delete();
 ```
 
-
 ## Check
 
-In `vendor/cakephp-plugins.php`:
+### In `vendor/cakephp-plugins.php`:
 ```
 'RedirectPost' => $baseDir . '/vendor/adrianodemoura/redirect-post/',
 ```
 
-In `vendor/composer/autoload_psr4.php`:
+### In `vendor/composer/autoload_psr4.php`:
 ```
 'RedirectPost\\Test\\' => array($vendorDir . '/adrianodemoura/redirect-post/tests'),
 'RedirectPost\\' => array($vendorDir . '/adrianodemoura/redirect-post/src'),
