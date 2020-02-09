@@ -1,22 +1,17 @@
 <?php
 /**
- * Componente RedirectPost
- * 
- * load in Controller:
- * $this->loadComponent('RedirectPost', ['storage'=>'session', 'time'=>100]);
- * 
- * usage in Controller:
- * $this->RedirectPost->save( ['action'=>'action_target'], $data);
- * $data = $this->RedirectPost->read();
- * $this->RedirectPost->delete();
+ * Component Redirect
+ *
+ * @package 	redirectPost.Controller.Component
+ * @author 		Adriano Moura
  */
-namespace App\Controller\Component;
+namespace RedirectPost\Controller\Component;
 use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 /**
- * Mantém o componente RedirectPost.
+ * Mantém o componente redirect do plugin RedirectPost.
  */
-class RedirectPostComponent extends Component
+class RedirectComponent extends Component
 {
     /**
      * Chave a ser usada para guardados os dados no storage.
@@ -31,7 +26,7 @@ class RedirectPostComponent extends Component
      *
      * @var Integer
      */
-    private $time       = 60;
+    private $time       = 1;
 
     /**
      * Storage do dados, pode ser "session" ou "cache".
@@ -140,7 +135,7 @@ class RedirectPostComponent extends Component
         $Sessao     = $this->_registry->getController()->request->getSession();
         $dados      = $Sessao->read( $this->chave );
         $data       = @$dados['data'];
-        $expiracao  = round( (mktime() - @$dados['time']) / 60);
+        $expiracao  = ((mktime() - @$dados['time']) / 60);
 
         if ( $expiracao > $this->time )
         {
@@ -178,5 +173,3 @@ class RedirectPostComponent extends Component
         return $data;
     }
 }
-
-?>
