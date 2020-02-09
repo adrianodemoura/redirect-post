@@ -3,6 +3,13 @@
 ## Considerations
 Plugin to redirect and save post.
 
+You can use three types of the storage: session, cache and cookie. 
+
+When loadComponent:
+```
+ $this->loadComponent( 'RedirectPost.Redirect', ['storage'=>'session|cache|cookie']);
+```
+
 Use the force, read the code.
 
 ## Requirements
