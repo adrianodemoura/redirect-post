@@ -6,25 +6,21 @@
 	"homepage": "https://github.com/adrianodemoura/redirect-post",
 	"license": "MIT",
     "minimum-stability": "stable",
-
     "authors": [
         {
             "name": "Adriano Moura",
             "homepage": "https://github.com/adrianodemoura"
         }
     ],
-
     "require": {
         "php": ">=5.6",
         "cakephp/cakephp": "^3.5",
     },
-
     "support": {
         "issues": "https://github.com/adrianodemoura/redirect-post/issues",
         "forum": "http://stackoverflow.com/tags/redirect-post",
         "source": "https://github.com/adrianodemoura/redirect-post"
     },
-
     "autoload": {
         "psr-4": {
             "RedirectPost\\": "src",
