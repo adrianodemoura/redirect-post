@@ -31,17 +31,17 @@ public function initialize()
 to save:
 ```
 $data = $this->request->getData();
-$this->RedirectPost->save( ['action'=>'acton_target'], $data);
+$this->Redirect->save( ['action'=>'acton_target'], $data);
 ```
 
 to read:
 ``` 
-$data = $this->RedirectPost->read();
+$data = $this->Redirect->read();
 ```
 
 to delete:
 ```
-$this->RedirectPost->delete();
+$this->Redirect->delete();
 ```
 
 
