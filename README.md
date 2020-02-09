@@ -12,16 +12,16 @@ cakePHP 3
 ## Installation
 ```
 $ composer require adrianodemoura/redirect-post
+
 ```
-
-## Usage
-
 ### In `src/Application.php`:
 
 ```
 parent::bootstrap();
 $this->addPlugin('RedirectPost');
 ```
+
+## Usage
 
 ### In Controller:
 
