@@ -32,7 +32,7 @@ public function initialize()
 }
 ```
 
-### to save:
+### to save and redirect:
 ```
 $data = $this->request->getData();
 $this->Redirect->save( ['action'=>'acton_target'], $data);
