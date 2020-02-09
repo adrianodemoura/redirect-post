@@ -15,7 +15,7 @@ class RedirectComponent extends Component
 {
     /**
      * Chave a ser usada para guardados os dados no storage.
-     * O Padrão é Redirect.PluginController
+     * O Padrão é "Redirect.{NomePlugin}{NomeController}"
      *
      * @var Integer
      */
@@ -30,6 +30,7 @@ class RedirectComponent extends Component
 
     /**
      * Storage do dados, pode ser "session" ou "cache".
+     * No caso de cache o componente irá o diretório "tmp/cache/redirectPost" do sistema, certifique-se que o diretório foi criado e possua permissão de escrita.
      * 
      * @var     String
      */
@@ -37,8 +38,6 @@ class RedirectComponent extends Component
 
     /**
      * Método de inicilização do componente.
-     * 
-     * ### Config
      * 
      * @param   array   $config     Configurações do componente. chave, time e storage.
      * @return  \Cake\Http\Response|null
@@ -74,11 +73,6 @@ class RedirectComponent extends Component
         
         switch ($this->storage)
         {
-            case 'session':
-                $Sessao = $this->_registry->getController()->request->getSession();
-                $Sessao->write( $this->chave, ['data'=>$data, 'time'=>mktime()] );
-            break;
-
             case 'cache':
                 $file   = strtolower( str_replace('RedirectPost.','',$this->chave) );
                 $dir    = TMP . "cache". DS. "redirectPost";
@@ -90,6 +84,10 @@ class RedirectComponent extends Component
                 fwrite( $fp, json_encode( ['data'=>$data, 'time'=>mktime()] ) );
                 fclose($fp);
             break;
+
+            default:
+                $Sessao = $this->_registry->getController()->request->getSession();
+                $Sessao->write( $this->chave, ['data'=>$data, 'time'=>mktime()] );
         }
         
         return $this->_registry->getController()->redirect( $url );
@@ -104,11 +102,12 @@ class RedirectComponent extends Component
     {
         switch ($this->storage)
         {
-            case 'session':
-                return $this->getSession();
             case 'cache':
                 return $this->getCache();
             break;
+
+            default:
+                return $this->getSession();
         }
     }
 
@@ -121,16 +120,15 @@ class RedirectComponent extends Component
     {
         switch ($this->storage)
         {
-            case 'session':
-                $Sessao = $this->_registry->getController()->request->getSession();
-                $Sessao->delete( $this->chave );
-            break;
-
             case 'cache':
                 $file   = strtolower( str_replace('RedirectPost.','',$this->chave) );
                 $dir    = TMP . "cache". DS. "redirectPost";
                 unlink( $dir . DS . $file );
             break;
+
+            default:
+                $Sessao = $this->_registry->getController()->request->getSession();
+                $Sessao->delete( $this->chave );
         }
         return true;
     }
@@ -169,8 +167,8 @@ class RedirectComponent extends Component
     {
         $data       = false;
         $file       = strtolower( str_replace('RedirectPost.','',$this->chave) );
-        $dir        = TMP . "cache". DS. "redirectPost";
-        $dados      = @json_decode( file_get_contents( $dir.DS.$file ), true );
+        $dir        = TMP . "cache" . DS . "redirectPost";
+        $dados      = @json_decode( file_get_contents( $dir . DS . $file ), true );
         $data       = @$dados['data'];
         $expiracao  = round( (mktime() - @$dados['time']) / 60);
 
