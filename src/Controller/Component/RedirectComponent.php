@@ -26,7 +26,7 @@ class RedirectComponent extends Component
      *
      * @var Integer
      */
-    private $time       = 1;
+    private $time       = 10;
 
     /**
      * Storage do dados, pode ser "session" ou "cache".
