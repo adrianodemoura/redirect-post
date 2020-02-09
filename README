@@ -1,16 +1,15 @@
 ============================
-RedirectPost
+#RedirectPost
 ----------------------------
-:: Requirements
+## Requirements
 
 cakePHP 3
 
-:: Installation
+## Installation
 
 $ composer require adrianodemoura/redirect-post
 
-
-:: Usage
+## Usage
 
 In src/Application.php:
 
@@ -46,7 +45,7 @@ $this->RedirectPost->delete();
 ```
 
 
-:: Check
+## Check
 
 In vendor/cakephp-plugins.php:
 ```
