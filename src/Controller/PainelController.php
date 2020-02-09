@@ -19,6 +19,7 @@ class PainelController extends AppController
     public function initialize()
     {
         parent::initialize();
+        //$this->loadComponent( 'RedirectPost.Redirect', ['storage'=>'session', 'time'=>10] );
         //$this->loadComponent('RedirectPost.Redirect', ['storage'=>'cache', 'time'=>15]);
         $this->loadComponent('RedirectPost.Redirect');
     }
@@ -31,7 +32,6 @@ class PainelController extends AppController
     public function index()
     {
         $data       = $this->request->getData();
-        $Sessao     = $this->request->getSession();
         $PainelForm = new PainelForm();
 
         if ( $this->request->isPost() )

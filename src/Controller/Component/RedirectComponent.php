@@ -26,7 +26,7 @@ class RedirectComponent extends Component
      *
      * @var Integer
      */
-    private $time       = 10;
+    private $time       = 30;
 
     /**
      * Storage do dados, pode ser "session" ou "cache".
@@ -34,7 +34,7 @@ class RedirectComponent extends Component
      * 
      * @var     String
      */
-    private $storage    = 'session';
+    private $storage    = 'cookie';
 
     /**
      * Método de inicilização do componente.
@@ -44,14 +44,14 @@ class RedirectComponent extends Component
      */
     public function initialize( array $config=[] )
     {
-        $plugin         = $this->_registry->getController()->plugin;
+        $plugin         = $this->_registry->getController()->getPlugin();
 
         $chave          = 'CachePost.';
         if ( !empty($plugin) )
         {
             $chave .= $plugin.'.';
         }
-        $chave    .= $this->_registry->getController()->name;
+        $chave    .= $this->_registry->getController()->getName();
         $this->chave    = $chave;
 
         $this->time     = isset( $config['time'] ) ? $config['time'] : $this->time;
@@ -114,9 +114,13 @@ class RedirectComponent extends Component
 
                     throw new \Exception( __("Não foi possível abrir o arquivo $dir".DS."$file. Verifique se possui permissão de leitura !"), 2 );
                 }
-
+                
                 fwrite( $fp, json_encode( ['data'=>$data, 'time'=>mktime()] ) );
                 fclose($fp);
+            break;
+
+            case 'cookie':
+                setcookie( $this->chave, json_encode( ['data'=>$data, 'time'=>mktime()] ), strtotime( '+'+$this->time+' minutes') );
             break;
 
             default:
@@ -141,6 +145,10 @@ class RedirectComponent extends Component
                 return $this->getCache($insertTime);
             break;
 
+            case 'cookie':
+                return $this->getCookie($insertTime);
+            break;
+
             default:
                 return $this->getSession($insertTime);
         }
@@ -159,6 +167,10 @@ class RedirectComponent extends Component
                 $file   = strtolower( str_replace('.','_',$this->chave) );
                 $dir    = TMP . "cache". DS. "redirectPost";
                 @unlink( $dir . DS . $file );
+            break;
+
+            case 'cookie':
+                unset( $_COOKIE[$this->chave] );
             break;
 
             default:
@@ -202,7 +214,7 @@ class RedirectComponent extends Component
             }
         }
 
-        if ( $insertTime )
+        if ( $insertTime && !empty($data) )
         {
             $data['time_created_post'] = $dados['time'];
         }
@@ -232,6 +244,32 @@ class RedirectComponent extends Component
         }
 
         if ( $insertTime )
+        {
+            $data['time_created_post'] = $dados['time'];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Retorna os dados do Cookie.
+     *
+     * @param   Boolean         $insertTime     Se verdadeiro inclui o tempo de expiração, se falso não.
+     * @return  Boolean|Array   $data           Falso se o tempo expirou, Array se não.
+     */
+    private function getCookie( $insertTime = false )
+    {
+        $dados      = @json_decode( $_COOKIE[ str_replace('.','_', $this->chave) ], true );
+        $data       = @$dados['data'];
+        $expiracao  = ((mktime() - @$dados['time']) / 60);
+
+        if ( $expiracao > $this->time )
+        {
+            unset( $_COOKIE[$this->chave] );
+            $data = false;
+        }
+
+        if ( $insertTime && !empty($data) )
         {
             $data['time_created_post'] = $dados['time'];
         }
