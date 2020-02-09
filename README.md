@@ -3,6 +3,8 @@
 ## Considerations
 Plugin to redirect and save post.
 
+Use the force, read the code.
+
 ## Requirements
 
 cakePHP 3

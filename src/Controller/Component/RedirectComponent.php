@@ -2,8 +2,8 @@
 /**
  * Component Redirect
  *
- * @package 	redirectPost.Controller.Component
- * @author 		Adriano Moura
+ * @package     redirectPost.Controller.Component
+ * @author      Adriano Moura
  */
 namespace RedirectPost\Controller\Component;
 use Cake\Controller\Component;
@@ -58,7 +58,21 @@ class RedirectComponent extends Component
      */
     public function info()
     {
-        return ['time (minutes)' => $this->time, 'storage'=>$this->storage];
+        $Sessao     = $this->_registry->getController()->request->getSession();
+        $data       = $this->read(true);
+        $criado     = $data['time_created_post'];
+        $expirado   = $data['time_created_post'] + ($this->time * 60);
+        $diff       = $expirado - mktime();
+
+        return
+        [
+            'storage'           => $this->storage, 
+            'created'           => date( 'H:i:s', $criado ), 
+            'expired'           => date( 'H:i:s', $expirado ), 
+            'time to expiration'=> date( 'i:s', $diff ),
+            'expiration time (minutes)'   => $this->time,
+            'data'              => $data
+        ];
     }
 
     /**
@@ -96,18 +110,19 @@ class RedirectComponent extends Component
     /**
      * Retorna os dados de um redirectPost
      * 
-     * @return  Array|Boolean   Falso se o dado foi expirado, Array se não.
+     * @param   Boolean         $insertTime     Se verdadeiro retorna o tempo de expiração, Falso não.
+     * @return  Array|Boolean   $data           Falso se o dado foi expirado, Array se não.
      */
-    public function read()
+    public function read($insertTime = false)
     {
         switch ($this->storage)
         {
             case 'cache':
-                return $this->getCache();
+                return $this->getCache($insertTime);
             break;
 
             default:
-                return $this->getSession();
+                return $this->getSession($insertTime);
         }
     }
 
@@ -129,6 +144,10 @@ class RedirectComponent extends Component
             default:
                 $Sessao = $this->_registry->getController()->request->getSession();
                 $Sessao->delete( $this->chave );
+                if ( empty($Sessao->read('RedirectPost')) )
+                {
+                    $Sessao->delete('RedirectPost');
+                }
         }
         return true;
     }
@@ -136,9 +155,10 @@ class RedirectComponent extends Component
     /**
      * Retorna os dados do Cache.
      * 
-     * @return  False|Array     Falso se o tempo expirou, Array se não.
+     * @param   Boolean         $insertTime     Se verdadeiro inclui o tempo de expiração, se falso não.
+     * @return  False|Array     $data           Falso se o tempo expirou, Array se não.
      */
-    private function getSession()
+    private function getSession($insertTime = false)
     {
         $Sessao     = $this->_registry->getController()->request->getSession();
         $dados      = $Sessao->read( $this->chave );
@@ -155,15 +175,21 @@ class RedirectComponent extends Component
             }
         }
 
+        if ( $insertTime )
+        {
+            $data['time_created_post'] = $dados['time'];
+        }
+
         return $data;
     }
 
     /**
      * Retorna os dados do Cache.
      * 
-     * @return  False|Array     Falso se o tempo expirou, Array se não.
+     * @param   Boolean         $insertTime     Se verdadeiro inclui o tempo de expiração, se falso não.
+     * @return  Boolean|Array   $data           Falso se o tempo expirou, Array se não.
      */
-    private function getCache()
+    private function getCache($insertTime = false)
     {
         $data       = false;
         $file       = strtolower( str_replace('RedirectPost.','',$this->chave) );
@@ -176,6 +202,11 @@ class RedirectComponent extends Component
         {
             @unlink( $dir . DS . $file );
             $data = false;
+        }
+
+        if ( $insertTime )
+        {
+            $data['time_created_post'] = $dados['time'];
         }
 
         return $data;
