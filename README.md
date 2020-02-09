@@ -1,4 +1,3 @@
-============================
 #RedirectPost
 ----------------------------
 ## Requirements
@@ -11,7 +10,7 @@ $ composer require adrianodemoura/redirect-post
 
 ## Usage
 
-In src/Application.php:
+In `src/Application.php:`
 
 ```
 parent::bootstrap();
@@ -47,12 +46,12 @@ $this->RedirectPost->delete();
 
 ## Check
 
-In vendor/cakephp-plugins.php:
+In `vendor/cakephp-plugins.php:`
 ```
 'RedirectPost' => $baseDir . '/vendor/adrianodemoura/redirect-post/',
 ```
 
-In vendor/composer/autoload_psr4.php:
+In `vendor/composer/autoload_psr4.php:`
 ```
 'RedirectPost\\Test\\' => array($vendorDir . '/adrianodemoura/redirect-post/tests'),
 'RedirectPost\\' => array($vendorDir . '/adrianodemoura/redirect-post/src'),
