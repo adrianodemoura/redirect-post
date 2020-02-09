@@ -98,11 +98,23 @@ class RedirectComponent extends Component
             case 'cache':
                 $file   = strtolower( str_replace('.','_',$this->chave) );
                 $dir    = TMP . "cache". DS. "redirectPost";
-                $fp = @fopen($dir.DS.$file, "w");
+                $fp     = @fopen($dir.DS.$file, "w");
+
                 if ( !$fp )
                 {
-                    throw new \Exception( __("Não foi possível abrir o arquivo $dir".DS."$file. Verifique se possui permissão de leitura !") );
+                    if ( !mkdir($dir) )
+                    {
+                        throw new \Exception( __("Não foi possível criar o diretório $dir"), 1);
+                    }
+                    $fp = @fopen($dir.DS.$file, "w");
                 }
+
+                if ( !$fp )
+                {
+
+                    throw new \Exception( __("Não foi possível abrir o arquivo $dir".DS."$file. Verifique se possui permissão de leitura !"), 2 );
+                }
+
                 fwrite( $fp, json_encode( ['data'=>$data, 'time'=>mktime()] ) );
                 fclose($fp);
             break;
