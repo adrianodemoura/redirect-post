@@ -56,8 +56,8 @@ $this->Redirect->delete();
 
 ### In `vendor/composer/autoload_psr4.php`:
 ```
-'RedirectPost\\Test\\' => array($vendorDir . '/adrianodemoura/redirect-post/tests'),
 'RedirectPost\\' => array($vendorDir . '/adrianodemoura/redirect-post/src'),
+'RedirectPost\\Test\\' => array($vendorDir . '/adrianodemoura/redirect-post/tests'),
 ```
 
 
