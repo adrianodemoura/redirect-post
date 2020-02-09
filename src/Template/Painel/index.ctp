@@ -3,8 +3,10 @@
 
     echo $this->Form->create($PainelForm);
 
+    // campo nome
     echo $this->Form->control('nome');
 
+    // campo cpf
     echo $this->Form->control('cpf');
 
     echo $this->Form->submit('Enviar');
