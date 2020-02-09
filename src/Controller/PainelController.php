@@ -1,13 +1,14 @@
 <?php
-namespace RedirectPost\Controller;
-
-use RedirectPost\Controller\AppController;
-
 /**
- * Painel Controller
+ * Controller Painel
  *
- *
- * @method \RedirectPost\Model\Entity\Painel[]|\Cake\Datasource\ResultSetInterface paginate($object = null, array $settings = [])
+ * @package     redirectPost.Controller
+ * @author      Adriano Moura
+ */
+namespace RedirectPost\Controller;
+use RedirectPost\Controller\AppController;
+/**
+ * Cotnroller para teste do componente Redirect
  */
 class PainelController extends AppController
 {
@@ -22,7 +23,7 @@ class PainelController extends AppController
     }
 
     /**
-     * Método inicial
+     * Método inicial, que irá exibir o formulário.
      *
      * @return \Cake\Http\Response|null
      */
@@ -38,6 +39,9 @@ class PainelController extends AppController
             {
                 $this->Redirect->save( ['action'=>'visualizar'], $data);
             }
+        } else
+        {
+            //$this->Redirect->delete();
         }
 
         $this->set( compact('PainelForm') );
@@ -59,7 +63,6 @@ class PainelController extends AppController
             return $this->redirect( ['action'=>'index'] );
         }
         $data['info'] = $this->Redirect->info();
-        //$this->Redirect->delete();
 
         $this->set( compact('data') );
     }

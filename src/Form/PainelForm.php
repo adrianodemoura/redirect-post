@@ -1,20 +1,21 @@
 <?php
+/**
+ * Form Painel
+ */
 namespace RedirectPost\Form;
-
 use Cake\Form\Form;
 use Cake\Form\Schema;
 use Cake\Validation\Validator;
-
 /**
- * Painel Form.
+ * Mantém o formulário de teste do componeten redirect.
  */
 class PainelForm extends Form
 {
     /**
-     * Builds the schema for the modelless form
+     * Cria o esquema para os campos do formulário.
      *
-     * @param \Cake\Form\Schema $schema From schema
-     * @return \Cake\Form\Schema
+     * @param   \Cake\Form\Schema $schema   From schema
+     * @return  \Cake\Form\Schema
      */
     protected function _buildSchema(Schema $schema)
     {
@@ -24,10 +25,10 @@ class PainelForm extends Form
     }
 
     /**
-     * Form validation builder
+     * Construtor das validações do formulário.
      *
-     * @param \Cake\Validation\Validator $validator to use against the form
-     * @return \Cake\Validation\Validator
+     * @param   \Cake\Validation\Validator  $validator  validador.
+     * @return  \Cake\Validation\Validator
      */
     protected function _buildValidator(Validator $validator)
     {

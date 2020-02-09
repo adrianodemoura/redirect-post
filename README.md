@@ -12,7 +12,6 @@ cakePHP 3
 ## Installation
 ```
 $ composer require adrianodemoura/redirect-post
-
 ```
 ### In `src/Application.php`:
 
@@ -65,3 +64,4 @@ $this->Redirect->delete();
 ## Test
 
 access http://localhost/youcake3/redirect-post/painel
+

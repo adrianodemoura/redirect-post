@@ -1,11 +1,11 @@
 <?php
-
-namespace RedirectPost;
-
-use Cake\Core\BasePlugin;
-
 /**
- * Plugin for RedirectPost
+ * Plugin pra RedirectPost
+ */
+namespace RedirectPost;
+use Cake\Core\BasePlugin;
+/**
+ * Mantém o controller pai do plugin.
  */
 class Plugin extends BasePlugin
 {
