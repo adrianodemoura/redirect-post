@@ -62,7 +62,6 @@ $this->Redirect->delete();
 'RedirectPost\\Test\\' => array($vendorDir . '/adrianodemoura/redirect-post/tests'),
 ```
 
+## Test
 
-
-
-
+access http://localhost/youcake3/redirect-post/painel
