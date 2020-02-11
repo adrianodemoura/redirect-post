@@ -37,6 +37,15 @@ class RedirectComponent extends Component
     private $storage    = 'cookie';
 
     /**
+     * Serial do formulário, repassado via GET.
+     * Este serial é chave única para cada formulário gerado.
+     * Através dele é possível repetir o formulário várias vezes.
+     *
+     * @var     Integer
+     */
+    private $serialPost = 0;
+
+    /**
      * Método de inicilização do componente.
      * 
      * @param   array   $config     Configurações do componente. chave, time e storage.
@@ -47,16 +56,15 @@ class RedirectComponent extends Component
         $plugin         = $this->_registry->getController()->getPlugin();
 
         $chave          = 'CachePost.';
-        if ( !empty($plugin) )
-        {
-            $chave .= $plugin.'.';
-        }
-        $chave    .= $this->_registry->getController()->getName();
+        if ( !empty($plugin) ) { $chave .= $plugin.'.'; }
+        $chave          .= $this->_registry->getController()->getName();
         $this->chave    = $chave;
 
         $this->time     = isset( $config['time'] ) ? $config['time'] : $this->time;
 
         $this->storage  = isset( $config['storage'] ) ? strtolower($config['storage']) : $this->storage;
+
+        $this->serialPost = @$this->_registry->getController()->request->getParam('pass')[0];
     }
 
     /**
@@ -66,8 +74,7 @@ class RedirectComponent extends Component
      */
     public function info()
     {
-        $Sessao     = $this->_registry->getController()->request->getSession();
-        $data       = $this->read(true);
+        $data       = $this->read($this->serialPost, true);
         $criado     = $data['time_created_post'];
         $expirado   = $data['time_created_post'] + ($this->time * 60);
         $diff       = $expirado - mktime();
@@ -75,6 +82,7 @@ class RedirectComponent extends Component
         return
         [
             'chave'             => $this->chave,
+            'serialPost'        => $this->serialPost,
             'storage'           => $this->storage, 
             'created'           => date( 'H:i:s', $criado ), 
             'expired'           => date( 'H:i:s', $expirado ), 
@@ -93,11 +101,13 @@ class RedirectComponent extends Component
      */
     public function save($url=null, $data=[])
     {
+        $time   = mktime();
+        $chave  = $this->chave.".".$time;
         
         switch ($this->storage)
         {
             case 'cache':
-                $file   = strtolower( str_replace('.','_',$this->chave) );
+                $file   = strtolower( str_replace('.','_',$chave) );
                 $dir    = TMP . "cache". DS. "redirectPost";
                 $fp     = @fopen($dir.DS.$file, "w");
 
@@ -116,18 +126,27 @@ class RedirectComponent extends Component
                     throw new \Exception( __("Não foi possível abrir o arquivo $dir".DS."$file. Verifique se possui permissão de leitura !"), 2 );
                 }
                 
-                fwrite( $fp, json_encode( ['data'=>$data, 'time'=>mktime()] ) );
-                fclose($fp);
+                fwrite( $fp, json_encode( ['data'=>$data, 'time'=>$time] ) );
+                fclose( $fp );
             break;
 
             case 'cookie':
-                setcookie( $this->chave, json_encode( ['data'=>$data, 'time'=>mktime()] ), strtotime( '+'+$this->time+' minutes') );
+                setcookie( $chave, json_encode( ['data'=>$data, 'time'=>$time] ), strtotime( '+'+$this->time+' minutes') );
             break;
 
             default:
                 $Sessao = $this->_registry->getController()->request->getSession();
-                $Sessao->write( $this->chave, ['data'=>$data, 'time'=>mktime()] );
+                $Sessao->write( $chave, ['data'=>$data, 'time'=>$time] );
         }
+
+        if ( is_array($url) )
+        {
+            $url[] = $time;
+        } else
+        {
+            $url .= "/".$time;
+        }
+
         
         return $this->_registry->getController()->redirect( $url );
     }
@@ -135,43 +154,47 @@ class RedirectComponent extends Component
     /**
      * Retorna os dados de um redirectPost
      * 
+     * @param   Integer         $keyPost        Chave do formulário.
      * @param   Boolean         $insertTime     Se verdadeiro retorna o tempo de expiração, Falso não.
      * @return  Array|Boolean   $data           Falso se o dado foi expirado, Array se não.
      */
     public function read($insertTime = false)
     {
-        switch ($this->storage)
+        switch ( $this->storage )
         {
             case 'cache':
-                return $this->getCache($insertTime);
+                return $this->getCache( $insertTime );
             break;
 
             case 'cookie':
-                return $this->getCookie($insertTime);
+                return $this->getCookie( $insertTime );
             break;
 
             default:
-                return $this->getSession($insertTime);
+                return $this->getSession( $insertTime );
         }
     }
 
     /**
      * Exclui o RedirectPost
      * 
+     * @param   Integer     $keyPost    Serial do formulário.
      * @return  \Cake\Http\Response|Null
      */
     public function delete()
     {
-        switch ($this->storage)
+        $chave  = $this->chave.".".$this->serialPost;
+
+        switch ( $this->storage )
         {
             case 'cache':
-                $file   = strtolower( str_replace('.','_',$this->chave) );
+                $file   = strtolower( str_replace('.','_',$chave) );
                 $dir    = TMP . "cache". DS. "redirectPost";
                 @unlink( $dir . DS . $file );
             break;
 
             case 'cookie':
-                unset($_COOKIE[str_replace('.','_', $this->chave)]);
+                unset($_COOKIE[str_replace('.','_', $chave)]);
                 setcookie( $this->chave, '', (time() - 3600) );
             break;
 
@@ -179,7 +202,7 @@ class RedirectComponent extends Component
                 $plugin     = $this->_registry->getController()->plugin;
                 $Sessao     = $this->_registry->getController()->request->getSession();
 
-                $Sessao->delete( $this->chave );
+                $Sessao->delete( $chave );
 
                 if ( empty($Sessao->read('CachePost.'.$plugin)) )
                 {
@@ -190,6 +213,7 @@ class RedirectComponent extends Component
                     $Sessao->delete('CachePost');
                 }
         }
+
         return true;
     }
 
@@ -199,16 +223,17 @@ class RedirectComponent extends Component
      * @param   Boolean         $insertTime     Se verdadeiro inclui o tempo de expiração, se falso não.
      * @return  False|Array     $data           Falso se o tempo expirou, Array se não.
      */
-    private function getSession($insertTime = false)
+    private function getSession( $insertTime = false)
     {
+        $chave      = $this->chave.'.'.$this->serialPost;
         $Sessao     = $this->_registry->getController()->request->getSession();
-        $dados      = $Sessao->read( $this->chave );
+        $dados      = $Sessao->read( $chave );
         $data       = @$dados['data'];
         $expiracao  = ((mktime() - @$dados['time']) / 60);
 
         if ( $expiracao > $this->time )
         {
-            $Sessao->delete( $this->chave );
+            $Sessao->delete( $chave );
             $data = false;
             if ( empty($Sessao->read('RedirectPost')) ) 
             {
@@ -230,10 +255,11 @@ class RedirectComponent extends Component
      * @param   Boolean         $insertTime     Se verdadeiro inclui o tempo de expiração, se falso não.
      * @return  Boolean|Array   $data           Falso se o tempo expirou, Array se não.
      */
-    private function getCache($insertTime = false)
+    private function getCache( $insertTime = false)
     {
+        $chave      = $this->chave.'.'.$this->serialPost;
         $data       = false;
-        $file       = strtolower( str_replace('.','_',$this->chave) );
+        $file       = strtolower( str_replace('.','_',$chave) );
         $dir        = TMP . "cache" . DS . "redirectPost";
         $dados      = @json_decode( file_get_contents( $dir . DS . $file ), true );
         $data       = @$dados['data'];
@@ -261,7 +287,8 @@ class RedirectComponent extends Component
      */
     private function getCookie( $insertTime = false )
     {
-        $dados      = @json_decode( $_COOKIE[ str_replace('.','_', $this->chave) ], true );
+        $chave      = str_replace('.','_', $this->chave)."_".$this->serialPost;
+        $dados      = @json_decode( $_COOKIE[ $chave ], true );
         $data       = @$dados['data'];
         $expiracao  = ((mktime() - @$dados['time']) / 60);
 
