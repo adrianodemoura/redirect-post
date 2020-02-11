@@ -20,8 +20,8 @@ class PainelForm extends Form
     protected function _buildSchema(Schema $schema)
     {
         return $schema
-            ->addField('nome',  ['type'=>'string', 'default'=>'Usuário Teste do Plugin RedirectPost'] )
-            ->addField('cpf',   ['type'=>'string', 'default'=>'12345678901'] );
+            ->addField('nome',  ['type'=>'string', 'length'=>30, 'default'=>'Usuário Teste do Plugin RedirectPost'] )
+            ->addField('cpf',   ['type'=>'string', 'length'=>11, 'default'=>'12345678901'] );
     }
 
     /**
