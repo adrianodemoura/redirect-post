@@ -34,7 +34,7 @@ class RedirectComponent extends Component
      * 
      * @var     String
      */
-    private $storage    = 'cookie';
+    private $storage    = 'session';
 
     /**
      * Serial do formulário, repassado via GET.
@@ -65,6 +65,8 @@ class RedirectComponent extends Component
         $this->storage  = isset( $config['storage'] ) ? strtolower($config['storage']) : $this->storage;
 
         $this->serialPost = @$this->_registry->getController()->request->getParam('pass')[0];
+
+        $this->_registry->getController()->set( 'serialPost', $this->serialPost );
     }
 
     /**
@@ -74,9 +76,9 @@ class RedirectComponent extends Component
      */
     public function info()
     {
-        $data       = $this->read($this->serialPost, true);
-        $criado     = $data['time_created_post'];
-        $expirado   = $data['time_created_post'] + ($this->time * 60);
+        $data       = $this->read();
+        $criado     = @$data['time_created_post'];
+        $expirado   = @$data['time_created_post'] + ($this->time * 60);
         $diff       = $expirado - mktime();
 
         return
@@ -95,15 +97,20 @@ class RedirectComponent extends Component
     /**
      * Executa o redirecionamento a salva na sessão os dados de $data.
      * 
-     * @param   mixed   $url    Parâmetros do redirecionamento, pode ser uma string oum array, veja mais parâmetros do método redirect.
+     * @param   mixed   $url    Parâmetros do redirecionamento, pode ser uma string ou ums array, veja mais parâmetros do método redirect.
      * @param   Array   $data   Dados a serem salvos.
      * @return  \Cake\Http\Response|Null
      */
-    public function save($url=null, $data=[])
+    public function saveRedirect($url=null, $data=[])
     {
         $time   = mktime();
         $chave  = $this->chave.".".$time;
-        
+
+        if ( $this->serialPost > 0 )
+        {
+            $this->delete( $this->chave.'.'.$this->serialPost );
+        }
+
         switch ($this->storage)
         {
             case 'cache':
@@ -147,7 +154,6 @@ class RedirectComponent extends Component
             $url .= "/".$time;
         }
 
-        
         return $this->_registry->getController()->redirect( $url );
     }
 
@@ -158,20 +164,20 @@ class RedirectComponent extends Component
      * @param   Boolean         $insertTime     Se verdadeiro retorna o tempo de expiração, Falso não.
      * @return  Array|Boolean   $data           Falso se o dado foi expirado, Array se não.
      */
-    public function read($insertTime = false)
+    public function read( $chave='' )
     {
         switch ( $this->storage )
         {
             case 'cache':
-                return $this->getCache( $insertTime );
+                return $this->getCache( $chave );
             break;
 
             case 'cookie':
-                return $this->getCookie( $insertTime );
+                return $this->getCookie( $chave );
             break;
 
             default:
-                return $this->getSession( $insertTime );
+                return $this->getSession( $chave );
         }
     }
 
@@ -181,9 +187,9 @@ class RedirectComponent extends Component
      * @param   Integer     $keyPost    Serial do formulário.
      * @return  \Cake\Http\Response|Null
      */
-    public function delete()
+    public function delete( $chave='' )
     {
-        $chave  = $this->chave.".".$this->serialPost;
+        $chave  = empty( $chave ) ? $this->chave.".".$this->serialPost : $chave;
 
         switch ( $this->storage )
         {
@@ -196,14 +202,20 @@ class RedirectComponent extends Component
             case 'cookie':
                 unset($_COOKIE[str_replace('.','_', $chave)]);
                 setcookie( $this->chave, '', (time() - 3600) );
+                $this->log( $chave );
             break;
 
             default:
                 $plugin     = $this->_registry->getController()->plugin;
+                $name       = $this->_registry->getController()->name;
                 $Sessao     = $this->_registry->getController()->request->getSession();
 
                 $Sessao->delete( $chave );
 
+                if ( empty($Sessao->read('CachePost.'.$plugin.'.'.$name)) )
+                {
+                    $Sessao->delete('CachePost.'.$plugin.'.'.$name);
+                }
                 if ( empty($Sessao->read('CachePost.'.$plugin)) )
                 {
                     $Sessao->delete('CachePost.'.$plugin);
@@ -220,12 +232,12 @@ class RedirectComponent extends Component
     /**
      * Retorna os dados do Cache.
      * 
-     * @param   Boolean         $insertTime     Se verdadeiro inclui o tempo de expiração, se falso não.
-     * @return  False|Array     $data           Falso se o tempo expirou, Array se não.
+     * @param   String          $chave      Chave do formulário.
+     * @return  False|Array     $data       Falso se o tempo expirou, Array se não.
      */
-    private function getSession( $insertTime = false)
+    private function getSession( $chave='' )
     {
-        $chave      = $this->chave.'.'.$this->serialPost;
+        $chave      = empty( $chave ) ? $this->chave.".".$this->serialPost : $chave;
         $Sessao     = $this->_registry->getController()->request->getSession();
         $dados      = $Sessao->read( $chave );
         $data       = @$dados['data'];
@@ -234,14 +246,12 @@ class RedirectComponent extends Component
         if ( $expiracao > $this->time )
         {
             $Sessao->delete( $chave );
-            $data = false;
             if ( empty($Sessao->read('RedirectPost')) ) 
             {
                 $Sessao->delete('RedirectPost');
             }
-        }
-
-        if ( $insertTime && !empty($data) )
+            $data = [];
+        } else
         {
             $data['time_created_post'] = $dados['time'];
         }
@@ -252,13 +262,13 @@ class RedirectComponent extends Component
     /**
      * Retorna os dados do Cache.
      * 
-     * @param   Boolean         $insertTime     Se verdadeiro inclui o tempo de expiração, se falso não.
-     * @return  Boolean|Array   $data           Falso se o tempo expirou, Array se não.
+     * @param   String          $chave      Chave do formulário.
+     * @return  Boolean|Array   $data       Falso se o tempo expirou, Array se não.
      */
-    private function getCache( $insertTime = false)
+    private function getCache( $chave='' )
     {
-        $chave      = $this->chave.'.'.$this->serialPost;
-        $data       = false;
+        $chave      = empty( $chave ) ? $this->chave.".".$this->serialPost : $chave;
+        $data       = [];
         $file       = strtolower( str_replace('.','_',$chave) );
         $dir        = TMP . "cache" . DS . "redirectPost";
         $dados      = @json_decode( file_get_contents( $dir . DS . $file ), true );
@@ -268,10 +278,8 @@ class RedirectComponent extends Component
         if ( $expiracao > $this->time )
         {
             @unlink( $dir . DS . $file );
-            $data = false;
-        }
-
-        if ( $insertTime )
+            $data = [];
+        } else
         {
             $data['time_created_post'] = $dados['time'];
         }
@@ -282,25 +290,25 @@ class RedirectComponent extends Component
     /**
      * Retorna os dados do Cookie.
      *
-     * @param   Boolean         $insertTime     Se verdadeiro inclui o tempo de expiração, se falso não.
-     * @return  Boolean|Array   $data           Falso se o tempo expirou, Array se não.
+     * @param   String          $chave      Chave do formulário.
+     * @return  Boolean|Array   $data       Falso se o tempo expirou, Array se não.
      */
-    private function getCookie( $insertTime = false )
+    private function getCookie( $chave='' )
     {
-        $chave      = str_replace('.','_', $this->chave)."_".$this->serialPost;
+        $chave      = empty( $chave ) ? $this->chave.".".$this->serialPost : $chave;
+        $chave      = str_replace('.','_', $chave);
         $dados      = @json_decode( $_COOKIE[ $chave ], true );
         $data       = @$dados['data'];
         $expiracao  = ((mktime() - @$dados['time']) / 60);
 
-        if ( $expiracao > $this->time )
+        if ( $expiracao > $this->time || empty($data) )
         {
             unset( $_COOKIE[$this->chave] );
-            $data = false;
-        }
-
-        if ( $insertTime && !empty($data) )
+            $data = [];
+        } else
         {
-            $data['time_created_post'] = $dados['time'];
+            $data['time_created_post'] = @$dados['time'];
+            $this->log( $chave );
         }
 
         return $data;

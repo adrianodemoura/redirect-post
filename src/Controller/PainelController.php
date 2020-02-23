@@ -19,9 +19,7 @@ class PainelController extends AppController
     public function initialize()
     {
         parent::initialize();
-        //$this->loadComponent( 'RedirectPost.Redirect', ['storage'=>'session', 'time'=>10] );
-        //$this->loadComponent('RedirectPost.Redirect', ['storage'=>'cache', 'time'=>15]);
-        $this->loadComponent('RedirectPost.Redirect');
+        $this->loadComponent( 'RedirectPost.Redirect' );
     }
 
     /**
@@ -31,15 +29,18 @@ class PainelController extends AppController
      */
     public function index()
     {
-        $data       = $this->request->getData();
         $PainelForm = new PainelForm();
 
         if ( $this->request->isPost() )
         {
+            $data   = $this->request->getData();
             if ( $PainelForm->execute( $data ) )
             {
-                $this->Redirect->save( ['action'=>'visualizar'], $data);
+                $this->Redirect->saveRedirect( ['action'=>'visualizar'], $data);
             }
+        } else
+        {
+            $PainelForm->setData( $this->Redirect->read() );
         }
 
         $this->set( compact('PainelForm') );
@@ -55,9 +56,9 @@ class PainelController extends AppController
     {
         $data = $this->Redirect->read();
 
-        if ( !$data )
+        if ( empty($data) )
         {
-            $this->Flash->error( __('Parâmetros inválidos !') );
+            $this->Flash->error( __('Formulário inválido !') );
             return $this->redirect( ['action'=>'index'] );
         }
         $data['info'] = $this->Redirect->info();

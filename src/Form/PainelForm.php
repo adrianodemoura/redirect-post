@@ -20,7 +20,7 @@ class PainelForm extends Form
     protected function _buildSchema(Schema $schema)
     {
         return $schema
-            ->addField('nome',  ['type'=>'string', 'length'=>30, 'default'=>'Usuário Teste do Plugin RedirectPost'] )
+            ->addField('nome',  ['type'=>'string', 'length'=>50, 'default'=>'Usuário Teste do Plugin RedirectPost'] )
             ->addField('cpf',   ['type'=>'string', 'length'=>11, 'default'=>'12345678901'] );
     }
 
@@ -33,7 +33,7 @@ class PainelForm extends Form
     protected function _buildValidator(Validator $validator)
     {
         $validator
-            ->add('nome',   'length', ['rule' => ['minLength', 30], 'message' => __('Tamanho inválido para o campo !')] )
+            ->add('nome',   'length', ['rule' => ['minLength', 10], 'message' => __('Tamanho inválido para o campo !')] )
             ->add('cpf',    'length', ['rule' => ['minLength', 11], 'message' => __('Tamanho inválido para o campo !')] );
 
         return $validator;
