@@ -305,15 +305,15 @@ class RedirectComponent extends Component
         $chave      = empty( $chave ) ? $this->chave.".".$this->serialPost : $chave;
         $chave      = str_replace('.','_', $chave);
 
-        //$dados      = @json_decode( $_COOKIE[ $chave ], true );
         $dados      = $this->Cookie->read( $chave );
 
         $data       = @$dados['data'];
+
         $expiracao  = ((mktime() - @$dados['time']) / 60);
 
         if ( $expiracao > $this->time || empty($data) )
         {
-            unset( $_COOKIE[$this->chave] );
+            $this->delete( $chave );
             $data = [];
         } else
         {
