@@ -58,7 +58,8 @@ class PainelController extends AppController
 
         if ( empty($data) )
         {
-            $this->Flash->error( __('Formulário inválido !') );
+            $info = $this->Redirect->info();
+            $this->Flash->error( __("Formulário ".$info['serialPost']." inválido !") );
             return $this->redirect( ['action'=>'index'] );
         }
         $data['info'] = $this->Redirect->info();
@@ -73,9 +74,12 @@ class PainelController extends AppController
      */
     public function limpar()
     {
-        $this->Redirect->delete();
-        $this->Flash->success( __('O Cache foi limpo com sucesso') );
+        $info       = $this->Redirect->info();
+        $serialPost = $info['serialPost'];
 
+        $this->Redirect->delete();
+
+        $this->Flash->success( __("O Formulário $serialPost, foi limpo com sucesso.") );
         return $this->redirect( ['action'=>'index'] );
     }
 }
