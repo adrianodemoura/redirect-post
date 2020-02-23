@@ -43,7 +43,7 @@ class RedirectComponent extends Component
      *
      * @var     Integer
      */
-    private $serialPost = 0;
+    private $serialForm = 0;
 
     /**
      * Componentes
@@ -63,7 +63,7 @@ class RedirectComponent extends Component
         $this->Controller   = $this->_registry->getController();
         $plugin             = $this->Controller->getPlugin();
 
-        $chave              = 'CachePost.';
+        $chave              = 'RedirectPost.';
         if ( !empty($plugin) ) { $chave .= $plugin.'.'; }
         $chave              .= $this->Controller->getName();
         $this->chave        = $chave;
@@ -72,10 +72,10 @@ class RedirectComponent extends Component
 
         $this->storage      = isset( $config['storage'] ) ? strtolower($config['storage']) : $this->storage;
 
-        $this->serialPost   = @$this->Controller->request->getParam('pass')[0];
+        $this->serialForm   = @$this->Controller->request->getParam('pass')[0];
 
         $this->Controller->set( 'chave', $this->chave );
-        $this->Controller->set( 'serialPost', $this->serialPost );
+        $this->Controller->set( 'serialForm', $this->serialForm );
     }
 
     /**
@@ -83,17 +83,17 @@ class RedirectComponent extends Component
      *
      * @return  Array   $info   time and storage of the component.
      */
-    public function info()
+    public function info( $chave='' )
     {
-        $data       = $this->read();
-        $criado     = @$data['time_created_post'];
-        $expirado   = @$data['time_created_post'] + ($this->time * 60);
-        $diff       = $expirado - mktime();
+        $data       = $this->read( $chave );
+        $criado     = @$data['time_created_form'];
+        $expirado   = $criado + ($this->time * 60);
+        $diff       = $expirado - time();
 
         return
         [
             'chave'             => $this->chave,
-            'serialPost'        => $this->serialPost,
+            'serialForm'        => $this->serialForm,
             'storage'           => $this->storage, 
             'created'           => date( 'H:i:s', $criado ), 
             'expired'           => date( 'H:i:s', $expirado ), 
@@ -112,12 +112,12 @@ class RedirectComponent extends Component
      */
     public function saveRedirect($url=null, $data=[])
     {
-        $time   = mktime();
+        $time   = time();
         $chave  = $this->chave.".".$time;
 
-        if ( $this->serialPost > 0 )
+        if ( $this->serialForm > 0 )
         {
-            $this->delete( $this->chave.'.'.$this->serialPost );
+            $this->delete( $this->chave.'.'.$this->serialForm );
         }
 
         switch ($this->storage)
@@ -147,7 +147,6 @@ class RedirectComponent extends Component
             break;
 
             case 'cookie':
-                //setcookie( $chave, json_encode( ['data'=>$data, 'time'=>$time] ), strtotime( '+'+$this->time+' minutes'), $this->Controller->request->base.'/' );
                 $this->Cookie->write( str_replace('.','_',$chave), ['data'=>$data, 'time'=>$time] );
             break;
 
@@ -199,7 +198,7 @@ class RedirectComponent extends Component
      */
     public function delete( $chave='' )
     {
-        $chave  = empty( $chave ) ? $this->chave.".".$this->serialPost : $chave;
+        $chave  = empty( $chave ) ? $this->chave.".".$this->serialForm : $chave;
         $chave  = str_replace('.','_', $chave);
 
         switch ( $this->storage )
@@ -219,17 +218,17 @@ class RedirectComponent extends Component
 
                 $Sessao->delete( $chave );
 
-                if ( empty($Sessao->read('CachePost.'.$plugin.'.'.$name)) )
+                if ( empty($Sessao->read('RedirectPost.'.$plugin.'.'.$name)) )
                 {
-                    $Sessao->delete('CachePost.'.$plugin.'.'.$name);
+                    $Sessao->delete('RedirectPost.'.$plugin.'.'.$name);
                 }
-                if ( empty($Sessao->read('CachePost.'.$plugin)) )
+                if ( empty($Sessao->read('RedirectPost.'.$plugin)) )
                 {
-                    $Sessao->delete('CachePost.'.$plugin);
+                    $Sessao->delete('RedirectPost.'.$plugin);
                 }
-                if ( empty($Sessao->read('CachePost')) )
+                if ( empty($Sessao->read('RedirectPost')) )
                 {
-                    $Sessao->delete('CachePost');
+                    $Sessao->delete('RedirectPost');
                 }
         }
 
@@ -244,11 +243,11 @@ class RedirectComponent extends Component
      */
     private function getSession( $chave='' )
     {
-        $chave      = empty( $chave ) ? $this->chave.".".$this->serialPost : $chave;
+        $chave      = empty( $chave ) ? $this->chave.".".$this->serialForm : $chave;
         $Sessao     = $this->Controller->request->getSession();
         $dados      = $Sessao->read( $chave );
         $data       = @$dados['data'];
-        $expiracao  = ((mktime() - @$dados['time']) / 60);
+        $expiracao  = ((time() - @$dados['time']) / 60);
 
         if ( $expiracao > $this->time )
         {
@@ -260,7 +259,7 @@ class RedirectComponent extends Component
             $data = [];
         } else
         {
-            $data['time_created_post'] = $dados['time'];
+            $data['time_created_form'] = $dados['time'];
         }
 
         return $data;
@@ -274,13 +273,13 @@ class RedirectComponent extends Component
      */
     private function getCache( $chave='' )
     {
-        $chave      = empty( $chave ) ? $this->chave.".".$this->serialPost : $chave;
+        $chave      = empty( $chave ) ? $this->chave.".".$this->serialForm : $chave;
         $data       = [];
         $file       = strtolower( str_replace('.','_',$chave) );
         $dir        = TMP . "cache" . DS . "redirectPost";
         $dados      = @json_decode( file_get_contents( $dir . DS . $file ), true );
         $data       = @$dados['data'];
-        $expiracao  = round( (mktime() - @$dados['time']) / 60);
+        $expiracao  = round( (time() - @$dados['time']) / 60);
 
         if ( $expiracao > $this->time )
         {
@@ -288,7 +287,7 @@ class RedirectComponent extends Component
             $data = [];
         } else
         {
-            $data['time_created_post'] = $dados['time'];
+            $data['time_created_form'] = $dados['time'];
         }
 
         return $data;
@@ -302,14 +301,14 @@ class RedirectComponent extends Component
      */
     private function getCookie( $chave='' )
     {
-        $chave      = empty( $chave ) ? $this->chave.".".$this->serialPost : $chave;
+        $chave      = empty( $chave ) ? $this->chave.".".$this->serialForm : $chave;
         $chave      = str_replace('.','_', $chave);
 
         $dados      = $this->Cookie->read( $chave );
 
         $data       = @$dados['data'];
 
-        $expiracao  = ((mktime() - @$dados['time']) / 60);
+        $expiracao  = ((time() - @$dados['time']) / 60);
 
         if ( $expiracao > $this->time || empty($data) )
         {
@@ -317,7 +316,7 @@ class RedirectComponent extends Component
             $data = [];
         } else
         {
-            $data['time_created_post'] = @$dados['time'];
+            $data['time_created_form'] = $dados['time'];
         }
 
         return $data;
