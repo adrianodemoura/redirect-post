@@ -1,0 +1,34 @@
+{#
+/**
+ * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE.txt
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @link          https://github.com/adrianodemoura/redirect-post
+ * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @since         1.0
+ */
+#}
+{% set allAssociations = Bake.aliasExtractor(modelObj, 'BelongsTo') %}
+{% set allAssociations = allAssociations|merge(Bake.aliasExtractor(modelObj, 'BelongsToMany')) %}
+{% set allAssociations = allAssociations|merge(Bake.aliasExtractor(modelObj, 'HasOne')) %}
+{% set allAssociations = allAssociations|merge(Bake.aliasExtractor(modelObj, 'HasMany')) %}
+    /**
+     * Método para limpar o formulário do cache.
+     *
+     * @param   Array   $data   Dados do Formulário
+     * @return  \Cake\Http\Response|Null
+     */
+    public function limpar()
+    {
+        $info       = $this->Redirect->info();
+        $serialPost = $info['serialPost'];
+
+        $this->Redirect->delete();
+
+        $this->Flash->success( __("O Formulário $serialPost, foi limpo com sucesso.") );
+        return $this->redirect( ['action'=>'index'] );
+    }

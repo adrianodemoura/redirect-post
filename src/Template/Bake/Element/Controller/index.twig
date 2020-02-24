@@ -1,0 +1,37 @@
+{#
+/**
+ * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
+ * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
+ *
+ * Licensed under The MIT License
+ * For full copyright and license information, please see the LICENSE.txt
+ * Redistributions of files must retain the above copyright notice.
+ *
+ * @link          https://github.com/adrianodemoura/redirect-post
+ * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @since         1.0
+ */
+#}
+    /**
+     * Método index
+     *
+     * @return \Cake\Http\Response|Null
+     */
+    public function index()
+    {
+        ${{ name }}Form = new {{ name }}Form();
+
+        if ( $this->request->isPost() )
+        {
+            $data = $this->request->getData();
+            if ( ${{ name }}Form->execute( $data ) )
+            {
+                $this->Redirect->saveRedirect( ['action'=>'visualizar'], $data);
+            }
+        } else
+        {
+            ${{ name }}Form->setData( $this->Redirect->read() );
+        }
+
+        $this->set( compact('{{ name }}Form') );
+    }

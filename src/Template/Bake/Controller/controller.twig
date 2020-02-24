@@ -1,0 +1,35 @@
+<?php
+/**
+ * {{ name }} Controller
+ *
+ * @author 		Adriano Moura
+ * @see 		http://github.com/adrianodemoura/redirect-post
+ * @version 	1.0
+ */
+namespace {{ namespace }}\Controller{{ prefix }};
+use {{ namespace }}\Controller\AppController;
+use {{ namespace }}\Form\{{ name }}Form;
+
+/**
+ * Mantém o controlador {{ name }}
+ */
+class {{ name }}Controller extends AppController
+{
+	/**
+	 * Componentes
+	 *
+	 * @var 	Array
+	 */
+	public $components = ['RedirectPost.Redirect'];
+{{ br }}
+{{ br }}
+
+{%- set actions = ['index', 'visualizar'] %}
+{%- for action in actions %}
+{% if loop.index > 1 %}
+
+{% endif %}
+    {%- element 'Controller/' ~ action %}
+{% endfor %}
+
+}
