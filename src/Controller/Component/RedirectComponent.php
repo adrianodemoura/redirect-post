@@ -9,37 +9,46 @@ namespace RedirectPost\Controller\Component;
 use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 /**
- * Mantém o componente redirect do plugin RedirectPost.
+ * Maintains the redirect componente of the RedirectPost plugin.
  */
 class RedirectComponent extends Component
 {
     /**
-     * Chave a ser usada para guardados os dados no storage.
-     * O Padrão é "Redirect.{NomePlugin}{NomeController}"
+     * Sufix to key.
+     *
+     * @var     string
+     */
+    private $sufix      = 'Redirect';
+
+    /**
+     * Key of the form.
+     * The default nomenclauture is "RedirectPost.PluginName.ControllerName"
      *
      * @var Integer
      */
-    private $chave      = '';
+    private $key        = '';
 
     /**
-     * Tempo para a experição dos dados em minutos.
+     * Tim do expiration of the form, in minutes.
      *
      * @var Integer
      */
     private $time       = 20;
 
     /**
-     * Storage do dados, pode ser "session" ou "cache".
-     * No caso de cache o componente irá o diretório "tmp/cache/redirectPost" do sistema, certifique-se que o diretório foi criado e possua permissão de escrita.
+     * Storage default.
+     * cookie|session|file.
+     *
+     * if file, make the sure that directo "tmp/cache/redirect" exists.
      * 
-     * @var     String
+     * @var     string
      */
     private $storage    = 'cookie';
 
     /**
-     * Serial do formulário, repassado via GET.
-     * Este serial é chave única para cada formulário gerado.
-     * Através dele é possível repetir o formulário várias vezes.
+     * Form serial.
+     * This atribute must be informed by the GET.
+     * He is a unique key of the form.
      *
      * @var     Integer
      */
@@ -53,46 +62,48 @@ class RedirectComponent extends Component
     public $components  = ['Cookie'];
 
     /**
-     * Método de inicilização do componente.
+     * hook method.
      * 
-     * @param   array   $config     Configurações do componente. chave, time e storage.
-     * @return  \Cake\Http\Response|null
+     * @param   array   $config         Component settings: sufix, key, expiration time, storage.
+     * @return  void
      */
     public function initialize( array $config=[] )
     {
         $this->Controller   = $this->_registry->getController();
         $plugin             = $this->Controller->getPlugin();
 
-        $chave              = 'RedirectPost.';
-        if ( !empty($plugin) ) { $chave .= $plugin.'.'; }
-        $chave              .= $this->Controller->getName();
-        $this->chave        = $chave;
+        $this->time         = isset( $config['time'] )      ? $config['time']                   : $this->time;
 
-        $this->time         = isset( $config['time'] ) ? $config['time'] : $this->time;
+        $this->storage      = isset( $config['storage'] )   ? strtolower($config['storage'])    : $this->storage;
 
-        $this->storage      = isset( $config['storage'] ) ? strtolower($config['storage']) : $this->storage;
+        $this->sufix        = isset( $config['sufix'] )     ? strtolower($config['sufix'])      : $this->sufix;
+
+        $key                = $this->sufix.'.'; if ( !empty($plugin) ) { $key .= $plugin.'.'; }
+        $key                .= $this->Controller->getName();
+        $this->key          = $key;
 
         $this->serialForm   = @$this->Controller->request->getParam('pass')[0];
 
-        $this->Controller->set( 'chave', $this->chave );
+        $this->Controller->set( 'sufix', $this->sufix );
+        $this->Controller->set( 'key', $this->key );
         $this->Controller->set( 'serialForm', $this->serialForm );
     }
 
     /**
-     * Return information of Redirect.
+     * Return information of the form in cache..
      *
      * @return  Array   $info   time and storage of the component.
      */
-    public function info( $chave='' )
+    public function info( $key='' )
     {
-        $data       = $this->read( $chave );
+        $data       = $this->read( $key, true );
         $criado     = @$data['time_created_form'];
         $expirado   = $criado + ($this->time * 60);
         $diff       = $expirado - time();
 
         return
         [
-            'chave'             => $this->chave,
+            'chave'             => $this->key,
             'serialForm'        => $this->serialForm,
             'storage'           => $this->storage, 
             'created'           => date( 'H:i:s', $criado ), 
@@ -104,28 +115,28 @@ class RedirectComponent extends Component
     }
 
     /**
-     * Executa o redirecionamento a salva na sessão os dados de $data.
+     * Execute the redirection and save the form to cache.
      * 
-     * @param   mixed   $url    Parâmetros do redirecionamento, pode ser uma string ou ums array, veja mais parâmetros do método redirect.
-     * @param   Array   $data   Dados a serem salvos.
-     * @return  \Cake\Http\Response|Null
+     * @param   mixed   $url    redirect parameters.
+     * @param   array   $data   form data to be saved in cache.
+     * @return  void
      */
     public function saveRedirect($url=null, $data=[])
     {
         $time   = time();
-        $chave  = $this->chave.".".$time;
+        $key  = $this->key.".".$time;
 
         if ( $this->serialForm > 0 )
         {
-            $this->delete( $this->chave.'.'.$this->serialForm );
+            $this->delete( $this->key.'.'.$this->serialForm );
         }
 
         switch ($this->storage)
         {
-            case 'cache':
-                $file   = strtolower( str_replace('.','_',$chave) );
-                $dir    = TMP . "cache". DS. "redirectPost";
-                $fp     = @fopen($dir.DS.$file, "w");
+            case 'file':
+                $file   = strtolower( str_replace('.','_',$key) );
+                $dir    = TMP . "cache". DS. strtolower( $this->sufix );
+                $fp     = @fopen( $dir . DS . $file, "w");
 
                 if ( !$fp )
                 {
@@ -147,12 +158,12 @@ class RedirectComponent extends Component
             break;
 
             case 'cookie':
-                $this->Cookie->write( str_replace('.','_',$chave), ['data'=>$data, 'time'=>$time] );
+                $this->Cookie->write( str_replace('.','_',$key), ['data'=>$data, 'time'=>$time] );
             break;
 
             default:
                 $Sessao = $this->Controller->request->getSession();
-                $Sessao->write( $chave, ['data'=>$data, 'time'=>$time] );
+                $Sessao->write( $key, ['data'=>$data, 'time'=>$time] );
         }
 
         if ( is_array($url) )
@@ -167,48 +178,25 @@ class RedirectComponent extends Component
     }
 
     /**
-     * Retorna os dados de um redirectPost
+     * Delete a form from cache.
      * 
-     * @param   Integer         $keyPost        Chave do formulário.
-     * @param   Boolean         $insertTime     Se verdadeiro retorna o tempo de expiração, Falso não.
-     * @return  Array|Boolean   $data           Falso se o dado foi expirado, Array se não.
+     * @param   string          $key            Form key.
+     * @return  void
      */
-    public function read( $chave='' )
+    public function delete( $key='' )
     {
-        switch ( $this->storage )
-        {
-            case 'cache':
-                return $this->getCache( $chave );
-            break;
-
-            case 'cookie':
-                return $this->getCookie( $chave );
-            break;
-
-            default:
-                return $this->getSession( $chave );
-        }
-    }
-
-    /**
-     * Exclui o RedirectPost
-     * 
-     * @param   Integer     $keyPost    Serial do formulário.
-     * @return  \Cake\Http\Response|Null
-     */
-    public function delete( $chave='' )
-    {
-        $chave  = empty( $chave ) ? $this->chave.".".$this->serialForm : $chave;
-        $chave  = str_replace('.','_', $chave);
+        $key  = empty( $key ) ? $this->key . '.' . $this->serialForm : $key;
 
         switch ( $this->storage )
         {
-            case 'cache':
-                @unlink( TMP . "cache". DS. "redirectPost" . DS . strtolower( $chave ) );
+            case 'file':
+                $key = str_replace( '.', '_', $key);
+                @unlink( TMP . "cache". DS. strtolower($this->sufix) . DS . strtolower( $key ) );
             break;
 
             case 'cookie':
-                $this->Cookie->delete( $chave );
+                $key = str_replace( '.', '_', $key);
+                $this->Cookie->delete( $key );
             break;
 
             default:
@@ -216,19 +204,19 @@ class RedirectComponent extends Component
                 $name       = $this->Controller->name;
                 $Sessao     = $this->Controller->request->getSession();
 
-                $Sessao->delete( $chave );
+                $Sessao->delete( $key );
 
-                if ( empty($Sessao->read('RedirectPost.'.$plugin.'.'.$name)) )
+                if ( empty( $Sessao->read( $this->sufix . '.'. $plugin . '.' . $name) ) )
                 {
-                    $Sessao->delete('RedirectPost.'.$plugin.'.'.$name);
+                    $Sessao->delete( $this->sufix . '.' . $plugin . '.' . $name );
                 }
-                if ( empty($Sessao->read('RedirectPost.'.$plugin)) )
+                if ( empty( $Sessao->read( $this->sufix . '.' . $plugin ) ) )
                 {
-                    $Sessao->delete('RedirectPost.'.$plugin);
+                    $Sessao->delete( $this->sufix . '.' . $plugin );
                 }
-                if ( empty($Sessao->read('RedirectPost')) )
+                if ( empty( $Sessao->read( $this->sufix ) ) )
                 {
-                    $Sessao->delete('RedirectPost');
+                    $Sessao->delete( $this->sufix );
                 }
         }
 
@@ -236,28 +224,53 @@ class RedirectComponent extends Component
     }
 
     /**
-     * Retorna os dados do Cache.
+     * Return data of the form.
      * 
-     * @param   String          $chave      Chave do formulário.
-     * @return  False|Array     $data       Falso se o tempo expirou, Array se não.
+     * @param   string          $key            Form key.
+     * @param   boolean         $insertCreate   If true, return date of the form too. If False don't.
+     * @return  array|boolean   $data           If time expired, return False, eitheir Array.
      */
-    private function getSession( $chave='' )
+    public function read( $key='', $insertCreated=false )
     {
-        $chave      = empty( $chave ) ? $this->chave.".".$this->serialForm : $chave;
+        switch ( $this->storage )
+        {
+            case 'file':
+                return $this->getFile( $key, $insertCreated );
+            break;
+
+            case 'cookie':
+                return $this->getCookie( $key, $insertCreated );
+            break;
+
+            default:
+                return $this->getSession( $key, $insertCreated );
+        }
+    }
+
+    /**
+     * Return the form from session cache.
+     * 
+     * @param   String          $key            Form key.
+     * @param   Boolean         $insertCreate   If True, return time criation the form.
+     * @return  False|Array     $data           If time of the form expired, return False, either return Array.
+     */
+    private function getSession( $key='', $insertCreated=false )
+    {
+        $key      = empty( $key ) ? $this->key . '.' . $this->serialForm : $key;
         $Sessao     = $this->Controller->request->getSession();
-        $dados      = $Sessao->read( $chave );
+        $dados      = $Sessao->read( $key );
         $data       = @$dados['data'];
         $expiracao  = ((time() - @$dados['time']) / 60);
 
         if ( $expiracao > $this->time )
         {
-            $Sessao->delete( $chave );
-            if ( empty($Sessao->read('RedirectPost')) ) 
+            $Sessao->delete( $key );
+            if ( empty($Sessao->read( $this->sufix )) ) 
             {
-                $Sessao->delete('RedirectPost');
+                $Sessao->delete( $this->sufix );
             }
             $data = [];
-        } else
+        } elseif ( $insertCreated )
         {
             $data['time_created_form'] = $dados['time'];
         }
@@ -266,17 +279,18 @@ class RedirectComponent extends Component
     }
 
     /**
-     * Retorna os dados do Cache.
+     * Return the form from file cache.
      * 
-     * @param   String          $chave      Chave do formulário.
-     * @return  Boolean|Array   $data       Falso se o tempo expirou, Array se não.
+     * @param   String          $key            Form key.
+     * @param   Boolean         $insertCreate   If True, return time criation the form.
+     * @return  Boolean|Array   $data           If time of the form expired, return False, either return Array.
      */
-    private function getCache( $chave='' )
+    private function getFile( $key='', $insertCreated=false )
     {
-        $chave      = empty( $chave ) ? $this->chave.".".$this->serialForm : $chave;
+        $key      = empty( $key ) ? $this->key.".".$this->serialForm : $key;
         $data       = [];
-        $file       = strtolower( str_replace('.','_',$chave) );
-        $dir        = TMP . "cache" . DS . "redirectPost";
+        $file       = strtolower( str_replace('.','_',$key) );
+        $dir        = TMP . "cache" . DS . strtolower( $this->sufix );
         $dados      = @json_decode( file_get_contents( $dir . DS . $file ), true );
         $data       = @$dados['data'];
         $expiracao  = round( (time() - @$dados['time']) / 60);
@@ -285,7 +299,7 @@ class RedirectComponent extends Component
         {
             @unlink( $dir . DS . $file );
             $data = [];
-        } else
+        } elseif ( $insertCreated )
         {
             $data['time_created_form'] = $dados['time'];
         }
@@ -294,17 +308,18 @@ class RedirectComponent extends Component
     }
 
     /**
-     * Retorna os dados do Cookie.
+     * Return the form from cookie cache.
      *
-     * @param   String          $chave      Chave do formulário.
-     * @return  Boolean|Array   $data       Falso se o tempo expirou, Array se não.
+     * @param   string          $key            Form key.
+     * @param   boolean         $insertCreate   If True, return time criation the form.
+     * @return  boolean|array   $data           If time of the form expired, return False, either return Array.
      */
-    private function getCookie( $chave='' )
+    private function getCookie( $key='', $insertCreated=false )
     {
-        $chave      = empty( $chave ) ? $this->chave.".".$this->serialForm : $chave;
-        $chave      = str_replace('.','_', $chave);
+        $key      = empty( $key ) ? $this->key.".".$this->serialForm : $key;
+        $key      = str_replace('.','_', $key);
 
-        $dados      = $this->Cookie->read( $chave );
+        $dados      = $this->Cookie->read( $key );
 
         $data       = @$dados['data'];
 
@@ -312,9 +327,9 @@ class RedirectComponent extends Component
 
         if ( $expiracao > $this->time || empty($data) )
         {
-            $this->delete( $chave );
+            $this->delete( $key );
             $data = [];
-        } else
+        } elseif ( $insertCreated )
         {
             $data['time_created_form'] = $dados['time'];
         }

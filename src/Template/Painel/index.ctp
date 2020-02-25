@@ -13,9 +13,9 @@
 
     echo $this->Form->button('Enviar', ['type'=>'submit', 'class'=>'button'] );
 
-    if ( $serialPost )
+    if ( $serialForm )
     {
-        echo "&nbsp;".$this->Html->link('Limpar', ['action'=>'limpar', $serialPost], ['class'=>'button'] );
+        echo "&nbsp;".$this->Html->link('Limpar', ['action'=>'limpar', $serialForm], ['class'=>'button'] );
     }
 
     echo "</div>";

@@ -19,6 +19,8 @@ class PainelController extends AppController
     public function initialize()
     {
         parent::initialize();
+        //$this->loadComponent( 'RedirectPost.Redirect', ['storage'=>'file'] );
+        //$this->loadComponent( 'RedirectPost.Redirect', ['storage'=>'session'] );
         $this->loadComponent( 'RedirectPost.Redirect' );
     }
 
@@ -59,7 +61,7 @@ class PainelController extends AppController
         if ( empty($data) )
         {
             $info = $this->Redirect->info();
-            $this->Flash->error( __("Formulário ".$info['serialPost']." inválido !") );
+            $this->Flash->error( __("Formulário ".$info['serialForm']." inválido !") );
             return $this->redirect( ['action'=>'index'] );
         }
         $data['info'] = $this->Redirect->info();
@@ -75,11 +77,11 @@ class PainelController extends AppController
     public function limpar()
     {
         $info       = $this->Redirect->info();
-        $serialPost = $info['serialPost'];
+        $serialForm = $info['serialForm'];
 
         $this->Redirect->delete();
 
-        $this->Flash->success( __("O Formulário $serialPost, foi limpo com sucesso.") );
+        $this->Flash->success( __("O Formulário $serialForm, foi limpo com sucesso.") );
         return $this->redirect( ['action'=>'index'] );
     }
 }
